@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PulseID | Dashboard</title>
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:700,400|Roboto:400,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="brand">
+        <img src="assests/logo.png" alt="PulseID Logo" class="logo"/>
+        <span class="brand-name">PulseID</span>
+      </div>
+      <nav class="nav-actions">
+        <a href="tel:9513886363" class="helpline-btn">
+          <span class="helpline-label">Emergency Helpline:</span>
+          <span class="helpline-number">9513886363</span>
+        </a>
+        <a href="#" class="dashboard-link active">Dashboard</a>
+        <span class="divider">|</span>
+        <a href="login.html" class="logout-btn">Logout</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="dashboard-section">
+      <h2 class="dashboard-title">Your Medical Profile</h2>
+      <form class="dashboard-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" autocomplete="given-name" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" autocomplete="family-name" required>
+          </div>
+        </div>
+        <div class="form-row">
+         
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth</label>
+            <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+              <option value="" disabled selected>Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Non-binary</option>
+              <option>Prefer not to say</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bloodType">Blood Type</label>
+            <select id="bloodType" name="bloodType" required>
+              <option value="" disabled selected>Select Blood Type</option>
+              <option>A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B-</option>
+              <option>O+</option>
+              <option>O-</option>
+              <option>AB+</option>
+              <option>AB-</option>
+              <option>Unknown</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="allergies">Allergies</label>
+            <textarea id="allergies" name="allergies" placeholder="List allergies, separated by commas"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="conditions">Conditions</label>
+            <textarea id="conditions" name="conditions" placeholder="E.g. Diabetes, Hypertension"></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="medications">Medications</label>
+            <textarea id="medications" name="medications" placeholder="List current medications"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" id="address" name="address" autocomplete="street-address">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" autocomplete="address-level2">
+          </div>
+          <div class="form-group">
+            <label for="state">State</label>
+            <input type="text" id="state" name="state" autocomplete="address-level1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="zip">Zip</label>
+            <input type="text" id="zip" name="zip" autocomplete="postal-code">
+          </div>
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" id="country" name="country" autocomplete="country">
+          </div>
+        </div>
+        <div class="form-row">
+          
+        </div>
+        <div class="btn-row">
+          <button type="submit" class="btn-accent dashboard-save-btn">Save</button>
+          <!--<button type="button" class="btn-outline dashboard-edit-btn">Update</button>-->
+        </div>
+      </form>
+    </section>
+  </main>
+  <footer class="footer">
+    <span>&copy; 2025 PulseID. All rights reserved.</span>
+  </footer>
+
+<script>
+  
+  //if (!token) {
+    // Not logged in, redirect to login
+  //  window.location.href = "login.html";
+  //}
+
+  
+  const form = document.querySelector('.dashboard-form');
+
+  //const token = localStorage.getItem('pulseid_token');
+  const userId = localStorage.getItem('pulseid_user_id');
+
+  if (!userId) {
+    alert("You're not logged in!");
+    window.location.href = "login.html";
+  }
+
+  // Prefill form with data from API
+  async function prefillForm() {
+    try {
+      const res = await fetch(`https://api.pulseid.nxog.tech/user/${userId}`, {
+        method: 'GET',
+        credentials: 'include'
+        
+      });
+
+      if (!res.ok) {
+        console.warn("Failed to fetch user profile:", res.status);
+        return;
+      }
+
+      const data = await res.json();
+
+      for (const key in data) {
+        if (form[key]) {
+          form[key].value = data[key];
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  }
+
+  prefillForm();
+
+  // On submit: update the profile
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const jsonData = {};
+
+    for (const [key, value] of formData.entries()) {
+      if (value.trim() !== "") {
+        jsonData[key] = value.trim();
+      }
+    }
+
+    try {
+      const res = await fetch(`https://api.pulseid.nxog.tech/user/${userId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("Profile saved successfully!");
+      } else {
+        alert("Error: " + (result.error || "Failed to update profile"));
+      }
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      alert("An error occurred while saving.");
+    }
+  });
+  
+</script>
+
+
+</body>
+</html>

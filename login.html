@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PulseID | Login / Sign Up</title>
+  <link rel="stylesheet" href="styles/login.css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:700,400|Roboto:400,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="brand">
+        <img src="assests/logo.png" alt="PulseID Logo" class="logo"/>
+        <span class="brand-name">PulseID</span>
+      </div>
+      <nav class="nav-actions">
+        <a href="tel:9513886363" class="helpline-btn">
+          <span class="helpline-label">Emergency Helpline:</span>
+          <span class="helpline-number">9513886363</span>
+        </a>
+        <!-- <a href="#" class="login-link active">Login</a>
+        <span class="divider">|</span>-->
+        <a href="index.html" class="signup-btn">Home</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="hero-badge">Rapid Health Data for Rapid Response</div>
+      <div class="main-card">
+        <div class="main-card-header">
+          Your Life-Saving Info, One Call Away.
+        </div>
+        <div class="main-card-body">
+          In critical emergencies, time matters. This platform ensures your essential medical information is instantly available via SMS &mdash; just one call away.
+        </div>
+      </div>
+      <form class="login-signup-form">
+        <div class="form-header">Login / Sign Up</div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+          <button type="button" class="btn-accent">Send OTP</button>
+        </div>
+        <div class="form-group">
+          <label for="otp">Enter OTP</label>
+          <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
+          <button type="submit" class="btn-accent">Verify & Login</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  <footer class="footer">
+    <span>&copy; 2025 PulseID. All rights reserved.</span>
+  </footer>
+
+
+<script>
+  const phoneInput = document.getElementById('phone');
+  const otpInput = document.getElementById('otp');
+  const sendOtpBtn = document.querySelector('.form-group button[type="button"]');
+  const verifyBtn = document.querySelector('.form-group button[type="submit"]');
+
+  let verificationMode = ''; // 'register' or 'login'
+  let verificationId = ''; // userId or loginRequestId
+
+  sendOtpBtn.addEventListener('click', async () => {
+    const phone = phoneInput.value.trim();
+
+    if (!phone.match(/^\+?[1-9]\d{9,14}$/)) {
+      alert("Invalid phone number format. Use +1234567890");
+      return;
+    }
+
+    // Try registration first
+    try {
+      const res = await fetch('https://api.pulseid.nxog.tech/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('OTP sent for registration!');
+        verificationMode = 'register';
+        verificationId = data.userId;
+      } else if (res.status === 400 && data.error.includes("Phone number already registered and verified")) {
+        // Fall back to login
+        const loginRes = await fetch('https://api.pulseid.nxog.tech/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: phone })
+        });
+
+        const loginData = await loginRes.json();
+
+        if (loginRes.ok) {
+          alert('OTP sent for login!');
+          verificationMode = 'login';
+          verificationId = loginData.loginRequestId;
+        } else {
+          alert(loginData.message || "Login failed");
+        }
+      } else {
+        alert(data.message || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error sending OTP.");
+    }
+  });
+
+  verifyBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const otp = otpInput.value.trim();
+
+    if (!otp.match(/^\d{6}$/)) {
+      alert("OTP must be a 6-digit number.");
+      return;
+    }
+
+    if (!verificationId || !verificationMode) {
+      alert("Please send OTP first.");
+      return;
+    }
+
+    try {
+      const endpoint = verificationMode === 'register'
+        ? `https://api.pulseid.nxog.tech/user/${verificationId}/verify`
+        : `https://api.pulseid.nxog.tech/login/${verificationId}/verify`;
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('Login successful!');
+        console.log(data); // You may store user info here if needed
+        // Redirect or show dashboard
+        // Store session data
+        localStorage.setItem('pulseid_user_id', data.user.id);
+        localStorage.setItem('pulseid_phone', data.user.phoneNumber);
+
+        window.location.href = "dashboard.html";
+      } else {
+        alert(data.message || "OTP verification failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Verification error.");
+    }
+  });
+</script>
+
+
+
+</body>
+</html>
