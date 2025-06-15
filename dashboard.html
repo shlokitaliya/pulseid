@@ -137,7 +137,7 @@
   
   const form = document.querySelector('.dashboard-form');
 
-  //const token = localStorage.getItem('pulseid_token');
+  const token = localStorage.getItem('token');
   const userId = localStorage.getItem('pulseid_user_id');
 
   if (!userId) {
@@ -150,7 +150,11 @@
     try {
       const res = await fetch(`https://api.pulseid.nxog.tech/user/${userId}`, {
         method: 'GET',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json'
+        }
+        
         
       });
 
@@ -189,9 +193,10 @@
     try {
       const res = await fetch(`https://api.pulseid.nxog.tech/user/${userId}`, {
         method: 'PUT',
-        credentials: 'include',
+       
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(jsonData)
       });

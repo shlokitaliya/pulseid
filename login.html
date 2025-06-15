@@ -146,6 +146,7 @@
         // Store session data
         localStorage.setItem('pulseid_user_id', data.user.id);
         localStorage.setItem('pulseid_phone', data.user.phoneNumber);
+        localStorage.setItem('token',data.sessionToken)
 
         window.location.href = "dashboard.html";
       } else {
